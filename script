@@ -1,0 +1,334 @@
+// Inisialisasi variabel global
+let callHistory = [];
+let currentQueueNumber = "A001";
+let currentOperator = "Operator 1";
+let operators = [
+    { id: 1, name: "Operator 1", status: "available", currentQueue: null },
+    { id: 2, name: "Operator 2", status: "available", currentQueue: null },
+    { id: 3, name: "Operator 3", status: "available", currentQueue: null },
+    { id: 4, name: "Operator 4", status: "available", currentQueue: null },
+    { id: 5, name: "Operator 5", status: "available", currentQueue: null },
+    { id: 6, name: "Operator 6", status: "busy", currentQueue: "B012" },
+    { id: 7, name: "Operator 7", status: "available", currentQueue: null },
+    { id: 8, name: "Operator 8", status: "busy", currentQueue: "A003" }
+];
+
+// Fungsi untuk memperbarui waktu dan tanggal
+function updateDateTime() {
+    const now = new Date();
+    
+    // Format tanggal
+    const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = now.toLocaleDateString('id-ID', optionsDate);
+    document.getElementById('currentDate').textContent = formattedDate;
+    
+    // Format waktu
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('currentTime').textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+// Fungsi untuk memperbarui tampilan operator
+function updateOperatorsDisplay() {
+    const operatorsGrid = document.getElementById('operatorsGrid');
+    operatorsGrid.innerHTML = '';
+    
+    operators.forEach(operator => {
+        const operatorCard = document.createElement('div');
+        operatorCard.className = `operator-card ${operator.status}`;
+        
+        let statusText = operator.status === 'available' ? 'Tersedia' : 'Sibuk';
+        let statusClass = operator.status === 'available' ? 'status-available' : 'status-busy';
+        
+        operatorCard.innerHTML = `
+            <div class="operator-icon">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="operator-name">${operator.name}</div>
+            <div class="operator-status ${statusClass}">${statusText}</div>
+            <div class="operator-current">
+                ${operator.currentQueue ? `Sedang melayani: ${operator.currentQueue}` : 'Menunggu antrian'}
+            </div>
+        `;
+        
+        operatorsGrid.appendChild(operatorCard);
+    });
+}
+
+// Fungsi untuk memperbarui riwayat pemanggilan
+function updateCallHistory() {
+    const historyList = document.getElementById('callHistory');
+    historyList.innerHTML = '';
+    
+    // Tampilkan maksimal 10 riwayat terbaru
+    const recentHistory = callHistory.slice(-10);
+    
+    if (recentHistory.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">Belum ada riwayat pemanggilan</div>';
+        return;
+    }
+    
+    recentHistory.reverse().forEach(item => {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        historyItem.innerHTML = `
+            <div class="history-time">${item.time}</div>
+            <div class="history-number">${item.queueNumber}</div>
+            <div class="history-operator">${item.operator}</div>
+        `;
+        historyList.appendChild(historyItem);
+    });
+}
+
+// Fungsi untuk menambahkan riwayat pemanggilan
+function addToCallHistory(queueNumber, operator) {
+    const now = new Date();
+    const timeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    callHistory.push({
+        time: timeString,
+        queueNumber: queueNumber,
+        operator: operator
+    });
+    
+    updateCallHistory();
+}
+
+// Fungsi untuk membuat pengumuman suara
+function makeAnnouncement(queueNumber, operatorName, useAirportSound = true) {
+    const airportSound = document.getElementById('airportSound');
+    const volume = document.getElementById('volumeControl').value;
+    
+    // Teks untuk diucapkan
+    const announcementText = `Nomor antrian ${queueNumber}, silahkan menuju ke ${operatorName} untuk pendaftaran audisi SMTOWN.`;
+    
+    // Jika menggunakan suara bandara
+    if (useAirportSound) {
+        airportSound.volume = volume;
+        airportSound.play().then(() => {
+            // Setelah suara bandara selesai, ucapkan pengumuman
+            airportSound.onended = () => {
+                speakText(announcementText, volume);
+            };
+        }).catch(error => {
+            console.error("Error playing airport sound:", error);
+            // Jika gagal memutar suara bandara, langsung ucapkan pengumuman
+            speakText(announcementText, volume);
+        });
+    } else {
+        // Langsung ucapkan pengumuman tanpa suara bandara
+        speakText(announcementText, volume);
+    }
+}
+
+// Fungsi untuk mengucapkan teks dengan Web Speech API
+function speakText(text, volume) {
+    if ('speechSynthesis' in window) {
+        // Hentikan ucapan sebelumnya jika ada
+        speechSynthesis.cancel();
+        
+        // Buat utterance baru
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID'; // Bahasa Indonesia
+        utterance.volume = parseFloat(volume);
+        utterance.rate = 0.9; // Kecepatan bicara
+        utterance.pitch = 1.2; // Nada suara (sedikit lebih tinggi untuk suara wanita)
+        
+        // Pilih suara wanita jika tersedia
+        const voices = speechSynthesis.getVoices();
+        const femaleVoice = voices.find(voice => 
+            voice.lang === 'id-ID' && voice.name.toLowerCase().includes('female')
+        ) || voices.find(voice => 
+            voice.lang.startsWith('id') && !voice.name.toLowerCase().includes('male')
+        );
+        
+        if (femaleVoice) {
+            utterance.voice = femaleVoice;
+        }
+        
+        // Mulai berbicara
+        speechSynthesis.speak(utterance);
+        
+        // Update status suara
+        document.getElementById('voiceStatus').textContent = 'Berbicara...';
+        
+        // Kembalikan status setelah selesai
+        utterance.onend = () => {
+            document.getElementById('voiceStatus').textContent = 'Aktif';
+        };
+    } else {
+        alert('Browser Anda tidak mendukung Web Speech API. Silakan gunakan browser terbaru seperti Chrome atau Edge.');
+    }
+}
+
+// Fungsi untuk memanggil antrian
+function callQueue() {
+    const queuePrefix = document.getElementById('queuePrefix').value;
+    const queueNumber = document.getElementById('queueNumber').value;
+    const operatorId = document.getElementById('operatorSelect').value;
+    const announcementType = document.getElementById('announcementType').value;
+    
+    // Format nomor antrian lengkap
+    const fullQueueNumber = `${queuePrefix}${queueNumber.padStart(3, '0')}`;
+    const operatorName = `Operator ${operatorId}`;
+    
+    // Update antrian saat ini
+    document.getElementById('currentQueueNumber').textContent = fullQueueNumber;
+    document.getElementById('currentQueueOperator').textContent = operatorName;
+    
+    // Update operator status
+    const operatorIndex = operators.findIndex(op => op.id == operatorId);
+    if (operatorIndex !== -1) {
+        operators[operatorIndex].status = 'busy';
+        operators[operatorIndex].currentQueue = fullQueueNumber;
+        updateOperatorsDisplay();
+    }
+    
+    // Tambahkan ke riwayat
+    addToCallHistory(fullQueueNumber, operatorName);
+    
+    // Buat pengumuman
+    const useAirportSound = announcementType === 'normal';
+    makeAnnouncement(fullQueueNumber, operatorName, useAirportSound);
+    
+    // Update counter total antrian
+    const counterElement = document.querySelector('.counter-number');
+    let currentCount = parseInt(counterElement.textContent);
+    counterElement.textContent = (currentCount + 1).toString();
+    
+    // Auto increment untuk antrian berikutnya
+    autoIncrementQueue();
+}
+
+// Fungsi untuk auto increment antrian
+function autoIncrementQueue() {
+    const queuePrefix = document.getElementById('queuePrefix');
+    const queueNumber = document.getElementById('queueNumber');
+    
+    let currentNumber = parseInt(queueNumber.value);
+    let currentPrefix = queuePrefix.value;
+    
+    // Increment nomor
+    currentNumber++;
+    
+    // Jika mencapai 999, ganti prefix atau reset
+    if (currentNumber > 999) {
+        if (currentPrefix === 'A') {
+            queuePrefix.value = 'B';
+        } else if (currentPrefix === 'B') {
+            queuePrefix.value = 'C';
+        } else {
+            queuePrefix.value = 'A';
+        }
+        currentNumber = 1;
+    }
+    
+    // Update input
+    queueNumber.value = String(currentNumber).padStart(3, '0');
+}
+
+// Fungsi untuk antrian berikutnya
+function nextQueue() {
+    // Ambil antrian tertua dari riwayat yang belum selesai
+    // Untuk demo, kita akan menggunakan logika sederhana
+    const lastCalled = callHistory[callHistory.length - 1];
+    let nextQueueNumber = "A001";
+    let nextOperator = "Operator 1";
+    
+    if (lastCalled) {
+        // Parse nomor antrian terakhir
+        const prefix = lastCalled.queueNumber.charAt(0);
+        const number = parseInt(lastCalled.queueNumber.substring(1));
+        
+        // Tentukan antrian berikutnya
+        let nextPrefix = prefix;
+        let nextNumber = number + 1;
+        
+        if (nextNumber > 999) {
+            if (prefix === 'A') {
+                nextPrefix = 'B';
+            } else if (prefix === 'B') {
+                nextPrefix = 'C';
+            } else {
+                nextPrefix = 'A';
+            }
+            nextNumber = 1;
+        }
+        
+        nextQueueNumber = `${nextPrefix}${String(nextNumber).padStart(3, '0')}`;
+        
+        // Tentukan operator berikutnya (rotasi)
+        const lastOperatorId = parseInt(lastCalled.operator.split(' ')[1]);
+        const nextOperatorId = lastOperatorId === 8 ? 1 : lastOperatorId + 1;
+        nextOperator = `Operator ${nextOperatorId}`;
+    }
+    
+    // Update input
+    document.getElementById('queuePrefix').value = nextQueueNumber.charAt(0);
+    document.getElementById('queueNumber').value = nextQueueNumber.substring(1);
+    document.getElementById('operatorSelect').value = nextOperator.split(' ')[1];
+    
+    // Panggil antrian
+    callQueue();
+}
+
+// Fungsi untuk menguji suara
+function testVoice() {
+    const volume = document.getElementById('volumeControl').value;
+    speakText("Ini adalah uji suara untuk sistem antrian pendaftaran audisi SMTOWN.", volume);
+}
+
+// Fungsi untuk menghapus riwayat
+function clearHistory() {
+    if (confirm('Apakah Anda yakin ingin menghapus semua riwayat pemanggilan?')) {
+        callHistory = [];
+        updateCallHistory();
+    }
+}
+
+// Inisialisasi saat halaman dimuat
+document.addEventListener('DOMContentLoaded', function() {
+    // Update waktu dan tanggal setiap detik
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    
+    // Inisialisasi tampilan operator
+    updateOperatorsDisplay();
+    
+    // Inisialisasi riwayat pemanggilan
+    updateCallHistory();
+    
+    // Event listeners
+    document.getElementById('callQueueBtn').addEventListener('click', callQueue);
+    document.getElementById('nextQueueBtn').addEventListener('click', nextQueue);
+    document.getElementById('testVoiceBtn').addEventListener('click', testVoice);
+    document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+    
+    // Event listener untuk volume control
+    document.getElementById('volumeControl').addEventListener('input', function() {
+        const volume = this.value;
+        document.getElementById('voiceStatus').textContent = `Aktif (Volume: ${Math.round(volume * 100)}%)`;
+    });
+    
+    // Event listener untuk input nomor antrian (hanya angka)
+    document.getElementById('queueNumber').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '');
+        if (this.value.length > 3) {
+            this.value = this.value.substring(0, 3);
+        }
+    });
+    
+    // Tambahkan beberapa riwayat awal untuk demo
+    addToCallHistory("A001", "Operator 1");
+    addToCallHistory("B012", "Operator 3");
+    addToCallHistory("A003", "Operator 2");
+    
+    // Inisialisasi Web Speech API voices
+    if ('speechSynthesis' in window) {
+        speechSynthesis.getVoices(); // Memuat daftar suara
+    }
+    
+    // Tampilkan pesan sambutan
+    console.log("Sistem Antrian Pendaftaran Audisi SMTOWN siap digunakan!");
+});
