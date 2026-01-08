@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antrian Pendaftaran Audisi SMTOWN</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/SM_Town_Logo.svg/1200px-SM_Town_Logo.svg.png">
+</head>
+<body>
+    <div class="container">
+        <!-- Header dengan logo dan waktu -->
+        <header class="header">
+            <div class="logo-container">
+                <div class="logo">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/SM_Town_Logo.svg/1200px-SM_Town_Logo.svg.png" alt="SMTOWN Logo">
+                </div>
+                <div class="header-title">
+                    <h1>SISTEM ANTRIAN AUDISI</h1>
+                    <h2>SMTOWN GLOBAL AUDITION 2024</h2>
+                </div>
+            </div>
+            <div class="datetime-display">
+                <div class="date" id="currentDate">Rabu, 1 Januari 2024</div>
+                <div class="time" id="currentTime">00:00:00</div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Panel Antrian Saat Ini -->
+            <section class="current-queue-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-user-check"></i> ANTRIAN SAAT INI</h3>
+                </div>
+                <div class="current-queue-display">
+                    <div class="queue-info">
+                        <div class="queue-label">Nomor Antrian</div>
+                        <div class="queue-number" id="currentQueueNumber">A001</div>
+                        <div class="queue-instruction">SILAHKAN MENUJU KE</div>
+                        <div class="queue-operator" id="currentQueueOperator">OPERATOR 1</div>
+                    </div>
+                    <div class="queue-counter">
+                        <div class="counter-label">Total Antrian Hari Ini</div>
+                        <div class="counter-number">48</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel Kontrol Operator -->
+            <section class="control-panel">
+                <div class="section-header">
+                    <h3><i class="fas fa-tools"></i> PANEL KONTROL OPERATOR</h3>
+                </div>
+                
+                <div class="control-content">
+                    <!-- Panel untuk mengatur nomor antrian dan operator -->
+                    <div class="queue-control">
+                        <div class="control-group">
+                            <label for="queueNumber">Nomor Antrian</label>
+                            <div class="queue-input-container">
+                                <select id="queuePrefix">
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                </select>
+                                <input type="text" id="queueNumber" value="001" maxlength="3">
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="operatorSelect">Operator Tujuan</label>
+                            <select id="operatorSelect">
+                                <option value="1">Operator 1</option>
+                                <option value="2">Operator 2</option>
+                                <option value="3">Operator 3</option>
+                                <option value="4">Operator 4</option>
+                                <option value="5">Operator 5</option>
+                                <option value="6">Operator 6</option>
+                                <option value="7">Operator 7</option>
+                                <option value="8">Operator 8</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="announcementType">Jenis Pengumuman</label>
+                            <select id="announcementType">
+                                <option value="normal">Normal (Suara Bandara + Pengumuman)</option>
+                                <option value="urgent">Penting (Hanya Pengumuman)</option>
+                            </select>
+                        </div>
+                        
+                        <button id="callQueueBtn" class="call-btn">
+                            <i class="fas fa-bullhorn"></i> PANGGIL ANTRIAN
+                        </button>
+                        
+                        <button id="nextQueueBtn" class="next-btn">
+                            <i class="fas fa-forward"></i> ANTRIAN BERIKUTNYA
+                        </button>
+                        
+                        <div class="audio-control">
+                            <label for="volumeControl">Volume Suara</label>
+                            <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.7">
+                            <button id="testVoiceBtn" class="test-btn">
+                                <i class="fas fa-volume-up"></i> TEST SUARA
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Riwayat Pemanggilan -->
+                    <div class="history-panel">
+                        <div class="history-header">
+                            <h4><i class="fas fa-history"></i> RIWAYAT PEMANGGILAN</h4>
+                            <button id="clearHistoryBtn" class="clear-btn">
+                                <i class="fas fa-trash"></i> Hapus Riwayat
+                            </button>
+                        </div>
+                        <div class="history-list" id="callHistory">
+                            <!-- Riwayat akan diisi oleh JavaScript -->
+                            <div class="history-item">
+                                <div class="history-time">10:15:23</div>
+                                <div class="history-number">A001</div>
+                                <div class="history-operator">Operator 1</div>
+                            </div>
+                            <div class="history-item">
+                                <div class="history-time">10:10:05</div>
+                                <div class="history-number">B012</div>
+                                <div class="history-operator">Operator 3</div>
+                            </div>
+                            <div class="history-item">
+                                <div class="history-time">10:05:47</div>
+                                <div class="history-number">A003</div>
+                                <div class="history-operator">Operator 2</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Panel Daftar Operator -->
+            <section class="operators-panel">
+                <div class="section-header">
+                    <h3><i class="fas fa-users"></i> LOKET OPERATOR</h3>
+                </div>
+                <div class="operators-grid" id="operatorsGrid">
+                    <!-- Operator akan diisi oleh JavaScript -->
+                </div>
+            </section>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-info">
+                <p><i class="fas fa-info-circle"></i> Sistem Antrian Pendaftaran Audisi SMTOWN | Versi 2.0</p>
+                <p>Ikuti audisi global SMTOWN 2024 untuk kesempatan menjadi artis di bawah naungan SM Entertainment</p>
+            </div>
+            <div class="footer-status">
+                <p><i class="fas fa-microphone-alt"></i> Status Suara: <span id="voiceStatus">Aktif</span></p>
+                <p><i class="fas fa-clock"></i> Waktu Operasional: 08:00 - 17:00 WIB</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Audio untuk efek suara -->
+    <audio id="airportSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-airport-departure-announcement-2443.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
